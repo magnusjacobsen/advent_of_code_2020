@@ -12,13 +12,16 @@ fn main() {
             continue;
         }
         let split: Vec<&str> = tmp.split(" ").collect();
-        let min = usize::from_str(split[0].split("-").next().unwrap()).unwrap();
-        let max = usize::from_str(split[0].split("-").take(2).last().unwrap()).unwrap();
+        let fst = isize::from_str(split[0].split("-").next().unwrap()).unwrap();
+        let snd = isize::from_str(split[0].split("-").take(2).last().unwrap()).unwrap();
         let character: &str = &split[1][0..1];
         let password: &str = split[2];
-        let c = password.matches(character).count();
-        count = if c >= min && c <= max { count + 1 }
-                else { count }
+        let fst_c = &password[(fst-1) as usize..fst as usize];
+        let snd_c = &password[(snd-1) as usize..snd as usize];
+        if (character == fst_c && character != snd_c) ||
+            character != fst_c && character == snd_c { 
+            count += 1;
+        }
     }
     println!("{:?}", count);
 }
