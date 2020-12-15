@@ -7,7 +7,6 @@ def bin_part(inp, lo, hi):
     if current == 'B' or current == 'R':
         return bin_part(inp[1:], int((hi - lo + 1) / 2) + lo, hi)
 
-
 with open('input', 'r') as file:
     lines = file.readlines()
     max_id = 0
@@ -18,4 +17,4 @@ with open('input', 'r') as file:
         seat_id = row * 8 + col
         if seat_id > max_id:
             max_id = seat_id
-    print(max_id)            
+    print(max_id)
