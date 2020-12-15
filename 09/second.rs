@@ -2,42 +2,37 @@ use std::io::{self, BufRead};
 use std::str::FromStr;
 
 fn parse_input() -> Vec<i64> {
-    let stdin = io::stdin();
-    let lines = stdin.lock().lines();
-    let numbers: Vec<i64> = lines
+    io::stdin()
+        .lock()
+        .lines()
         .filter(|x| x.as_ref().unwrap() != "")
         .map(|x| i64::from_str(&x.unwrap()).unwrap())
-        .collect();
-    numbers
+        .collect()
 }
 
-fn find_weakness(numbers: Vec<i64>) -> (usize, i64) {
-    let mut index = 25;
-    'a: while index < numbers.len() {
-        let num = numbers[index];
-        for i in index - 25..index {
-            let must_match = num - numbers[i];
-            for j in i..index {
-                if must_match == numbers[j] {
-                    index += 1;
+fn find_weakness(numbers: Vec<i64>) -> (Vec<i64>, usize) {
+    'a: for i in 25..numbers.len() {
+        for j in i-25..i {
+            for k in j+1..i {
+                if numbers[i] - numbers[j] == numbers[k] {
                     continue 'a;
                 }
             }
         }
-        return (index, num);
+        return (numbers, i);
     }
-    (0, 0)
+    (vec![], 0)
 }
 
-fn exploit_weakness(numbers: Vec<i64>, number: i64) -> i64 {
+fn exploit_weakness((numbers, target): (Vec<i64>, usize)) -> i64 {
     'a: for i in 0..numbers.len() {
-        let mut possibles = vec![numbers[i]];
-        'b: for j in i + 1..numbers.len() {
-            possibles.push(numbers[j]);
-            match possibles.iter().sum::<i64>() {
-                sum if sum < number => continue 'b,
-                sum if sum > number => continue 'a,
-                _ => return possibles.iter().min().unwrap() + possibles.iter().max().unwrap(),
+        'b: for j in i..numbers.len() {
+            match numbers[i..j + 1].iter().sum::<i64>() {
+                sum if sum < numbers[target] => continue 'b,
+                sum if sum > numbers[target] => continue 'a,
+                _ => return 
+                    numbers[i..j + 1].iter().min().unwrap() + 
+                    numbers[i..j + 1].iter().max().unwrap(),
             }
         }
     }
@@ -45,8 +40,5 @@ fn exploit_weakness(numbers: Vec<i64>, number: i64) -> i64 {
 } 
 
 fn main() {
-    let numbers = parse_input();
-    let (_, number) = find_weakness(numbers.clone());
-    let exploit = exploit_weakness(numbers, number);
-    println!("exploit: {}", exploit);
+    println!("exploit: {}", exploit_weakness(find_weakness(parse_input())));
 }
