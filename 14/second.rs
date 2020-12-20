@@ -43,7 +43,7 @@ fn apply_mask(mask: &str, index: i32, address: u64, value: u64, memory: &mut Has
             }
             _   => {
                 let a = address | 2_u64.pow(index as u32);
-                let b = address & std::u64::MAX ^ 2_u64.pow(index as u32);
+                let b = address & (std::u64::MAX ^ 2_u64.pow(index as u32));
                 apply_mask(&mask[1..mask.len()], index - 1, a, value, memory);
                 apply_mask(&mask[1..mask.len()], index - 1, b, value, memory);
             }
@@ -76,6 +76,3 @@ fn main() {
     let result = calculate_memory(is_assignment, masks, assignments);
     println!("{}", result);
 }
-
-// too low 84574090922
-
