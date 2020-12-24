@@ -1,4 +1,5 @@
 use std::io::{self, BufRead};
+use std::collections::HashMap;
 
 fn parse_input() -> (Vec<Vec<i32>>, Vec<i32>, Vec<Vec<i32>>, Vec<usize>) {
     let stdin = io::stdin();
@@ -60,8 +61,8 @@ fn filter_tickets(rules: Vec<Vec<i32>>, tickets: Vec<Vec<i32>>) -> Vec<Vec<i32>>
     valid_tickets
 }
 
-fn valid_rules(rules: Vec<Vec<i32>>, tickets: Vec<Vec<i32>>) -> Vec<Vec<bool>> {
-    let mut valid_rules: Vec<Vec<bool>> = vec![vec![false; rules.len()]; tickets[0].len()]; // ticket field_id => rule_ids
+fn valid_rules(rules: Vec<Vec<i32>>, tickets: Vec<Vec<i32>>) -> Vec<Vec<usize>> {
+    let mut valid_rules: Vec<Vec<usize>> = vec![vec![]; tickets[0].len()]; // ticket field_id => rule_ids
     for k in 0..rules.len() {
         'field: for j in 0..tickets[0].len() {
             for i in 0..tickets.len() {
@@ -70,7 +71,7 @@ fn valid_rules(rules: Vec<Vec<i32>>, tickets: Vec<Vec<i32>>) -> Vec<Vec<bool>> {
                     continue 'field;
                 }
             }
-            valid_rules[j][k] = true;
+            valid_rules[j].push(k);
         }
     }
     valid_rules
@@ -79,17 +80,25 @@ fn valid_rules(rules: Vec<Vec<i32>>, tickets: Vec<Vec<i32>>) -> Vec<Vec<bool>> {
 // bipartite matching! Yay
 // Network flo!! Yay
 // possible rules = ticket field id, rule_ids
-fn field_id_to_rule_id(possible_rules: Vec<Vec<bool>>) {
-    for field in possible_rules {
-        for rule in field {
-            if rule {
-                print!("\x1b[0;31m1\x1b[0m ");
-            } else {
-                print!("0 ");
-            }
-        }
-        println!("");
+fn rec(possible_rules: &Vec<Vec<usize>>, index: usize, taken: &mut HashMap<usize, usize>) -> bool {
+  if index == possible_rules.len() {
+    return true;
+  }
+  'rule: for rule in &possible_rules[index] {
+    if taken.contains_key(rule) {
+      continue 'rule;
+    } else {
+      taken.insert(*rule, index);
+      let is_possible = rec(possible_rules, index + 1, taken);
+      if is_possible {
+        return true;
+      } else {
+        taken.remove(rule);
+        continue 'rule;
+      }
     }
+  }
+  false
 }
 
 fn main() {
@@ -98,10 +107,18 @@ fn main() {
     let valid_tickets = filter_tickets(rules.clone(), tickets);
     println!("len valid tickes: {}", valid_tickets.len());
     let valid_rules = valid_rules(rules, valid_tickets);
-    field_id_to_rule_id(valid_rules);
+    let mut taken = HashMap::new();
+    let is_possible = rec(&valid_rules, 0, &mut taken);
     
-    println!("\nDeparture ids:");
+    println!("is_possible: {}", is_possible);
+    //for (key, value) in taken {
+    //  println!("rule index: {}, field index: {}", key, value);
+    //}
+    println!("\nDeparture values:");
+    let mut mult: u128 = 1;
     for dids in departure_ids {
-        println!("{}", dids);
+      //println!("{}", dids);
+      mult *= my_ticket[taken[&dids]] as u128;  
     }
+    println!("{}", mult);
 }
