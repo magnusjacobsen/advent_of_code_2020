@@ -77,28 +77,24 @@ fn valid_rules(rules: Vec<Vec<i32>>, tickets: Vec<Vec<i32>>) -> Vec<Vec<usize>> 
     valid_rules
 }
 
-// bipartite matching! Yay
-// Network flo!! Yay
 // possible rules = ticket field id, rule_ids
-fn rec(possible_rules: &Vec<Vec<usize>>, index: usize, taken: &mut HashMap<usize, usize>) -> bool {
-  if index == possible_rules.len() {
-    return true;
-  }
-  'rule: for rule in &possible_rules[index] {
-    if taken.contains_key(rule) {
-      continue 'rule;
-    } else {
-      taken.insert(*rule, index);
-      let is_possible = rec(possible_rules, index + 1, taken);
-      if is_possible {
-        return true;
-      } else {
-        taken.remove(rule);
-        continue 'rule;
-      }
+fn field_id_to_rule_id(possible_rules: &Vec<Vec<usize>>, field_index: usize, configuration: &mut HashMap<usize, usize>) -> bool {
+    'rule: for j in 0..possible_rules[field_index].len() {
+        if configuration.contains_key(&j) {
+            continue 'rule;
+        }
+        configuration.insert(j, field_index);
+        if field_index == possible_rules.len() - 1 {
+            return true;
+        }
+        let is_possible = field_id_to_rule_id(possible_rules, field_index + 1, configuration);
+        if is_possible {
+            return is_possible;
+        } else {
+            configuration.remove(&j);
+        }
     }
-  }
-  false
+    false
 }
 
 fn main() {
@@ -107,18 +103,15 @@ fn main() {
     let valid_tickets = filter_tickets(rules.clone(), tickets);
     println!("len valid tickes: {}", valid_tickets.len());
     let valid_rules = valid_rules(rules, valid_tickets);
-    let mut taken = HashMap::new();
-    let is_possible = rec(&valid_rules, 0, &mut taken);
+    let mut configuration: HashMap<usize, usize> = HashMap::new();
+    let is_possible = field_id_to_rule_id(&valid_rules, 0, &mut configuration);
     
-    println!("is_possible: {}", is_possible);
-    //for (key, value) in taken {
-    //  println!("rule index: {}, field index: {}", key, value);
-    //}
     println!("\nDeparture values:");
     let mut mult: u128 = 1;
     for dids in departure_ids {
-      //println!("{}", dids);
-      mult *= my_ticket[taken[&dids]] as u128;  
+        let value = my_ticket[configuration[&dids]];
+        mult *= value as u128;
+        println!("{}", value);
     }
-    println!("{}", mult);
+    println!("mult: {}", mult);
 }
